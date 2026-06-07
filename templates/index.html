@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Segmentation Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            --card-bg: #ffffff;
+            --text-main: #2b303a;
+            --text-muted: #6b778c;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: rgba(79, 70, 229, 0.08);
+            --border-color: #e2e8f0;
+            --focus-ring: rgba(79, 70, 229, 0.25);
+            --success: #10b981;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.03);
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            padding: 35px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #4f46e5, #a855f7, #ec4899);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 28px;
+            margin: 0 0 8px 0;
+            background: linear-gradient(90deg, #312e81, #4f46e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header p {
+            font-size: 14.5px;
+            color: var(--text-muted);
+            margin: 0;
+            max-width: 550px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        /* Quick-fill section styles */
+        .quick-fill-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8fafc;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            border: 1px dashed #cbd5e1;
+            margin-bottom: 30px;
+        }
+
+        .quick-fill-title {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #475569;
+            margin-right: 5px;
+        }
+
+        .btn-quick {
+            font-family: inherit;
+            padding: 7px 14px;
+            background-color: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4b5563;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-quick:hover {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+            body {
+                padding: 20px 10px;
+            }
+            .card {
+                padding: 20px;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .label-desc {
+            font-weight: 500;
+            font-size: 11px;
+            color: var(--primary);
+            background-color: var(--primary-light);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        input, select {
+            font-family: inherit;
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+            background-color: #fafbfc;
+            box-sizing: border-box;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px var(--focus-ring);
+        }
+
+        input:hover, select:hover {
+            border-color: #cbd5e0;
+        }
+
+        /* Submit Button Styling */
+        .btn-submit {
+            grid-column: span 2;
+            font-family: inherit;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .btn-submit {
+                grid-column: span 1;
+            }
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(90deg, #4338ca 0%, #4f46e5 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(79, 70, 229, 0.15);
+        }
+
+        .btn-submit:active {
+            transform: translateY(1px);
+        }
+
+        /* Results Dashboard */
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-card {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            padding: 30px;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-icon {
+            font-size: 45px;
+            width: 75px;
+            height: 75px;
+            background: #f1f3f9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .result-title-area {
+            flex-grow: 1;
+        }
+
+        .result-badge {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 30px;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .result-segment-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .result-desc {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #4a5568;
+            margin: 12px 0 0 0;
+        }
+
+        .result-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .result-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .characteristics-box h3, .recommendation-box h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+        }
+
+        .characteristics-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .characteristics-list li {
+            font-size: 13.5px;
+            line-height: 1.5;
+            color: #4a5568;
+            padding-left: 24px;
+            position: relative;
+        }
+
+        .characteristics-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .recommendation-box {
+            background-color: var(--primary-light);
+            border: 1px solid rgba(79, 70, 229, 0.15);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .recommendation-box h3 {
+            color: var(--primary);
+        }
+
+        .recommendation-content {
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: #312e81;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <h1>📊 Segmentasi Pelanggan Pintar</h1>
+            <p>Sistem analitik berbasis Machine Learning (K-Means) untuk mendeteksi profil perilaku belanja pelanggan di Marketplace.</p>
+        </div>
+
+        <!-- Quick-Fill Contoh Data (Best Practice UX) -->
+        <div class="quick-fill-container">
+            <span class="quick-fill-title">⚡ Isi Cepat Contoh Data Latih:</span>
+            <button type="button" class="btn-quick" onclick="fillForm(1, 25, 26, 75, 1, 4, 1.2, 1, 4, 3.8)">🛍️ Promo Hunter</button>
+            <button type="button" class="btn-quick" onclick="fillForm(1, 50, 43, 39, 1, 2, 1.7, 1, 3, 3.6)">👴 Senior Hemat</button>
+            <button type="button" class="btn-quick" onclick="fillForm(0, 31, 78, 73, 2, 4, 3.2, 1, 1, 3.7)">💎 Premium Loyal</button>
+            <button type="button" class="btn-quick" onclick="fillForm(0, 40, 82, 25, 3, 1, 3.4, 1, 1, 3.2)">💼 Kaya Pasif</button>
+            <button type="button" class="btn-quick" onclick="fillForm(1, 34, 61, 68, 1, 4, 2.5, 2, 2, 3.8)">🚀 Aktif Eksploratif</button>
+        </div>
+        
+        <form method="POST" autocomplete="off">
+            <div class="grid-layout">
+                <!-- Col 1 -->
+                <div class="form-group">
+                    <label>
+                        Jenis Kelamin
+                        <span class="label-desc">Demografi</span>
+                    </label>
+                    <select name="jenis_kelamin">
+                        <option value="0">Laki-laki</option>
+                        <option value="1">Perempuan</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        Usia (Tahun)
+                        <span class="label-desc">Data Latih: 18 - 70</span>
+                    </label>
+                    <input type="number" name="usia" value="35" min="18" max="70" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        Pendapatan Tahunan (Juta Rp)
+                        <span class="label-desc">Data Latih: 15 - 140</span>
+                    </label>
+                    <input type="number" name="pendapatan" value="60" min="15" max="140" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        Skor Belanja (1-100)
+                        <span class="label-desc">Data Latih: 1 - 100</span>
+                    </label>
+                    <input type="number" name="skor_belanja" value="50" min="1" max="100" required>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        Metode Pembayaran Favorit
+                        <span class="label-desc">Pilihan</span>
+                    </label>
+                    <select name="metode_pembayaran">
+                        <option value="1">Dompet Digital</option>
+                        <option value="0">Bayar di Tempat (COD)</option>
+                        <option value="2">Kartu Kredit</option>
+                        <option value="3">Transfer Bank</option>
+                    </select>
+                </div>
+                
+                <!-- Col 2 -->
+                <div class="form-group">
+                    <label>
+                        Jumlah Transaksi per Bulan
+                        <span class="label-desc">Data Latih: 1 - 10</span>
+                    </label>
+                    <input type="number" name="transaksi_per_bulan" value="2" min="1" max="10" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        Rata-rata Nilai Transaksi (Juta Rp)
+                        <span class="label-desc">Data Latih: 0.5 - 6.5</span>
+                    </label>
+                    <input type="number" step="0.01" name="rata_nilai_transaksi" value="2.5" min="0.5" max="6.5" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        Jumlah Kategori Produk Dibeli
+                        <span class="label-desc">Pilih: 1 - 3</span>
+                    </label>
+                    <select name="jumlah_kategori" autocomplete="off">
+                        <option value="1">1 Kategori</option>
+                        <option value="2">2 Kategori</option>
+                        <option value="3">3 Kategori</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        Frekuensi Penggunaan Promo
+                        <span class="label-desc">Pilih: 0 - 6 kali</span>
+                    </label>
+                    <select name="frekuensi_promo">
+                        <option value="0">0 Kali</option>
+                        <option value="1">1 Kali</option>
+                        <option value="2" selected>2 Kali</option>
+                        <option value="3">3 Kali</option>
+                        <option value="4">4 Kali</option>
+                        <option value="5">5 Kali</option>
+                        <option value="6">6 Kali</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        Rata-rata Rating Diberikan
+                        <span class="label-desc">Data Latih: 2.0 - 5.0</span>
+                    </label>
+                    <input type="number" step="0.1" name="rata_rating" value="3.5" min="2.0" max="5.0" required>
+                </div>
+                
+                <button type="submit" class="btn-submit">🚀 Jalankan Segmentasi Pelanggan</button>
+            </div>
+        </form>
+    </div>
+
+    {% if hasil is not none and info is not none %}
+    <div class="results-container">
+        <div class="result-card">
+            <div class="result-header">
+                <div class="result-icon">
+                    {{ info.icon }}
+                </div>
+                <div class="result-title-area">
+                    <span class="result-badge" style="background-color: {{ info.warna_badge }}; color: {{ info.warna_primary }};">
+                        Hasil Prediksi: Cluster {{ hasil }}
+                    </span>
+                    <h2 class="result-segment-name">{{ info.nama }}</h2>
+                </div>
+            </div>
+            
+            <p class="result-desc">
+                <strong>Profil Segmen:</strong> {{ info.deskripsi }}
+            </p>
+            
+            <div style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 24px;">
+                <div class="result-body">
+                    <!-- Characteristics -->
+                    <div class="characteristics-box">
+                        <h3>📋 Karakteristik Utama</h3>
+                        <ul class="characteristics-list">
+                            {% for item in info.karakteristik %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    <!-- Recommendations -->
+                    <div class="recommendation-box">
+                        <h3>💡 Rekomendasi Pemasaran (Business Action)</h3>
+                        <p class="recommendation-content">
+                            {{ info.rekomendasi }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function fillForm(gender, usia, pendapatan, skorBelanja, pembayaran, transaksi, rataTransaksi, kategori, promo, rating) {
+    document.querySelector('select[name="jenis_kelamin"]').value = gender;
+    document.querySelector('input[name="usia"]').value = usia;
+    document.querySelector('input[name="pendapatan"]').value = pendapatan;
+    document.querySelector('input[name="skor_belanja"]').value = skorBelanja;
+    document.querySelector('select[name="metode_pembayaran"]').value = pembayaran;
+    document.querySelector('input[name="transaksi_per_bulan"]').value = transaksi;
+    document.querySelector('input[name="rata_nilai_transaksi"]').value = rataTransaksi;
+    document.querySelector('select[name="jumlah_kategori"]').value = kategori;
+    document.querySelector('select[name="frekuensi_promo"]').value = promo;
+    document.querySelector('input[name="rata_rating"]').value = rating;
+    
+    // Highlight inputs briefly for feedback
+    const inputs = document.querySelectorAll('input, select');
+    inputs.forEach(el => {
+        el.style.transition = 'all 0.3s ease';
+        el.style.borderColor = 'var(--primary)';
+        el.style.boxShadow = '0 0 0 4px var(--focus-ring)';
+        setTimeout(() => {
+            el.style.borderColor = 'var(--border-color)';
+            el.style.boxShadow = 'none';
+        }, 500);
+    });
+}
+</script>
+
+</body>
+</html>
