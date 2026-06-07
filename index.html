@@ -250,7 +250,7 @@
 
         /* Results Dashboard */
         .results-container {
-            display: flex;
+            display: none; /* Hidden by default, shown by JS */
             flex-direction: column;
             gap: 20px;
             animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -415,7 +415,7 @@
             <button type="button" class="btn-quick" onclick="fillForm(1, 34, 61, 68, 1, 4, 2.5, 2, 2, 3.8)">🚀 Aktif Eksploratif</button>
         </div>
         
-        <form method="POST" autocomplete="off">
+        <form onsubmit="event.preventDefault(); runSegmentation();" autocomplete="off">
             <div class="grid-layout">
                 <!-- Col 1 -->
                 <div class="form-group">
@@ -528,23 +528,23 @@
         </form>
     </div>
 
-    {% if hasil is not none and info is not none %}
-    <div class="results-container">
+    <!-- Results Panel -->
+    <div id="results" class="results-container">
         <div class="result-card">
             <div class="result-header">
-                <div class="result-icon">
-                    {{ info.icon }}
+                <div id="result-icon" class="result-icon">
+                    🛍️
                 </div>
                 <div class="result-title-area">
-                    <span class="result-badge" style="background-color: {{ info.warna_badge }}; color: {{ info.warna_primary }};">
-                        Hasil Prediksi: Cluster {{ hasil }}
+                    <span id="result-badge" class="result-badge">
+                        Hasil Prediksi: Cluster X
                     </span>
-                    <h2 class="result-segment-name">{{ info.nama }}</h2>
+                    <h2 id="result-segment-name" class="result-segment-name">Nama Segmen</h2>
                 </div>
             </div>
             
             <p class="result-desc">
-                <strong>Profil Segmen:</strong> {{ info.deskripsi }}
+                <strong>Profil Segmen:</strong> <span id="result-desc">Deskripsi</span>
             </p>
             
             <div style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 24px;">
@@ -552,28 +552,122 @@
                     <!-- Characteristics -->
                     <div class="characteristics-box">
                         <h3>📋 Karakteristik Utama</h3>
-                        <ul class="characteristics-list">
-                            {% for item in info.karakteristik %}
-                            <li>{{ item }}</li>
-                            {% endfor %}
+                        <ul id="result-characteristics" class="characteristics-list">
+                            <!-- Populated dynamically -->
                         </ul>
                     </div>
                     
                     <!-- Recommendations -->
                     <div class="recommendation-box">
                         <h3>💡 Rekomendasi Pemasaran (Business Action)</h3>
-                        <p class="recommendation-content">
-                            {{ info.rekomendasi }}
+                        <p id="result-recommendation" class="recommendation-content">
+                            Rekomendasi tindakan bisnis...
                         </p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
 
 <script>
+// 1. Z-Score Scaling Statistics from Training
+const stats = [
+    { mean: 0.56, std: 0.496 },       // Jenis Kelamin
+    { mean: 38.85, std: 13.969 },     // Usia
+    { mean: 60.56, std: 26.264 },     // Pendapatan Tahunan
+    { mean: 50.20, std: 25.823 },     // Skor Belanja
+    { mean: 2.62, std: 1.423 },       // Transaksi per Bulan
+    { mean: 2.478, std: 1.136 },      // Rata-rata Nilai Transaksi
+    { mean: 1.235, std: 0.490 },      // Jumlah Kategori Produk Dibeli
+    { mean: 2.075, std: 1.610 },      // Frekuensi Penggunaan Promo
+    { mean: 3.566, std: 0.534 },      // Rata-rata Rating Diberikan
+    { mean: 1.055, std: 1.002 }       // Metode Pembayaran Favorit
+];
+
+// 2. K-Means Cluster Centroids (5 Clusters, 10 Dimensions)
+const centers = [
+    [-0.02930265, -0.97765804, -1.30699065,  0.94512854,  0.65185788, -1.11996078,  0.26270105,  1.22690003,  0.38689158, -0.89675033], // Cluster 0
+    [ 0.13906945,  0.79325343, -0.67210208, -0.43417533, -0.44806709, -0.68969275, -0.2822846 ,  0.58599233,  0.01140756, -0.35200394], // Cluster 1
+    [-0.16665884, -0.58294125,  0.68042212,  0.87189696,  0.77992426,  0.66462957, -0.34067592, -0.74010233,  0.2888256 ,  0.14245817], // Cluster 2
+    [-0.14143015,  0.10889497,  0.82614224, -0.97354967, -0.88232509,  0.77159859, -0.43823923, -0.69476106, -0.68757037,  0.33156583], // Cluster 3
+    [ 0.27327909, -0.31998583,  0.00019914,  0.67245695,  0.97202383,  0.01513284,  2.09502976,  0.14280302,  0.51146687,  0.82773334]  // Cluster 4
+];
+
+// 3. Cluster Metadata for Dashboard
+const clusterInfo = {
+    0: {
+        nama: 'Pelanggan Muda Promo Hunter',
+        deskripsi: 'Pelanggan berusia muda dengan pendapatan relatif rendah yang sangat aktif berbelanja terutama ketika ada promo/diskon. Nilai transaksi per belanja kecil namun frekuensinya cukup tinggi.',
+        icon: '🛍️',
+        warna_primary: '#ff6b6b',
+        warna_badge: 'rgba(255, 107, 107, 0.15)',
+        karakteristik: [
+            'Usia rata-rata muda (~25 tahun)',
+            'Pendapatan tahunan rendah (~26 Juta Rp)',
+            'Skor belanja sangat tinggi (~75)',
+            'Penggunaan promo sangat sering (rata-rata 4 kali per bulan)'
+        ],
+        rekomendasi: 'Berikan penawaran diskon kilat (flash sale), promo cashback e-wallet, voucher gratis ongkir dengan batas minimum belanja rendah, dan produk-produk trendi dengan harga terjangkau.'
+    },
+    1: {
+        nama: 'Pelanggan Senior Hemat',
+        deskripsi: 'Pelanggan paruh baya hingga senior dengan pendapatan menengah ke bawah. Mereka cenderung berbelanja secara hati-hati, memprioritaskan kebutuhan pokok, dan menggunakan promo sewajarnya.',
+        icon: '👴',
+        warna_primary: '#fcc419',
+        warna_badge: 'rgba(252, 196, 25, 0.15)',
+        karakteristik: [
+            'Usia rata-rata senior (~50 tahun)',
+            'Pendapatan menengah ke bawah (~43 Juta Rp)',
+            'Skor belanja cenderung rendah (~39)',
+            'Frekuensi transaksi bulanan sedang (~2 kali per bulan)'
+        ],
+        rekomendasi: 'Tawarkan promo paket bundling (misal kebutuhan pokok/kesehatan), diskon khusus usia emas, serta sediakan antarmuka aplikasi yang sederhana dan mudah dinavigasi.'
+    },
+    2: {
+        nama: 'Pelanggan Premium Loyal',
+        deskripsi: 'Pelanggan berusia produktif dengan pendapatan tinggi dan daya beli sangat kuat. Mereka sangat aktif berbelanja barang bernilai besar, sangat loyal, dan tidak terlalu peduli dengan kupon promo.',
+        icon: '💎',
+        warna_primary: '#339af0',
+        warna_badge: 'rgba(51, 154, 240, 0.15)',
+        karakteristik: [
+            'Usia produktif dewasa muda (~31 tahun)',
+            'Pendapatan tahunan tinggi (~78 Juta Rp)',
+            'Skor belanja sangat tinggi (~73)',
+            'Jarang menggunakan promo dan transaksi bernilai besar (~3.2 Juta Rp per transaksi)'
+        ],
+        rekomendasi: 'Masukkan ke dalam program loyalitas eksklusif (VIP Club), tawarkan layanan prioritas, gratis ongkir instan tanpa syarat, akses awal (early access) untuk koleksi terbaru, dan penawaran personal berkualitas tinggi.'
+    },
+    3: {
+        nama: 'Pelanggan Kaya Pasif',
+        deskripsi: 'Pelanggan dengan pendapatan tinggi tetapi jarang melakukan transaksi. Sekalinya berbelanja, mereka membeli produk bernilai tinggi namun keterikatan (engagement) mereka terhadap marketplace masih rendah.',
+        icon: '💼',
+        warna_primary: '#94d82d',
+        warna_badge: 'rgba(148, 216, 45, 0.15)',
+        karakteristik: [
+            'Usia dewasa matang (~40 tahun)',
+            'Pendapatan tahunan tinggi (~82 Juta Rp)',
+            'Skor belanja cenderung rendah (~25)',
+            'Frekuensi belanja jarang (~1.3 kali) tetapi nilai transaksi besar (~3.3 Juta Rp)'
+        ],
+        rekomendasi: 'Gunakan personal marketing email/notifikasi tentang barang-barang mewah (high-end), rilis produk premium terbaru, serta promo eksklusif akhir pekan untuk menarik kembali minat belanja mereka.'
+    },
+    4: {
+        nama: 'Pelanggan Aktif Eksploratif',
+        deskripsi: 'Pelanggan sangat aktif dengan pendapatan menengah. Mereka sangat gemar mengeksplorasi dan membeli berbagai jenis kategori produk berbeda serta memiliki tingkat kepuasan yang tinggi.',
+        icon: '🚀',
+        warna_primary: '#ae3ec9',
+        warna_badge: 'rgba(174, 62, 201, 0.15)',
+        karakteristik: [
+            'Usia dewasa muda (~34 tahun)',
+            'Pendapatan tahunan menengah (~61 Juta Rp)',
+            'Membeli banyak kategori produk berbeda (rata-rata > 2 kategori)',
+            'Sangat aktif berbelanja (~4 kali) dengan tingkat kepuasan yang tinggi (~3.84/5)'
+        ],
+        rekomendasi: 'Gunakan sistem rekomendasi produk (recommender system) lintas kategori (cross-selling), tawarkan reward poin berdasarkan keaktifan harian/mingguan, serta berikan penawaran paket produk serbaguna.'
+    }
+};
+
 function fillForm(gender, usia, pendapatan, skorBelanja, pembayaran, transaksi, rataTransaksi, kategori, promo, rating) {
     document.querySelector('select[name="jenis_kelamin"]').value = gender;
     document.querySelector('input[name="usia"]').value = usia;
@@ -597,6 +691,73 @@ function fillForm(gender, usia, pendapatan, skorBelanja, pembayaran, transaksi, 
             el.style.boxShadow = 'none';
         }, 500);
     });
+}
+
+function runSegmentation() {
+    // 1. Gather raw inputs in training feature order
+    // Order: [gender, usia, pendapatan, skor_belanja, transaksi, rata_transaksi, kategori, promo, rating, pembayaran]
+    const rawValues = [
+        parseFloat(document.querySelector('select[name="jenis_kelamin"]').value),
+        parseFloat(document.querySelector('input[name="usia"]').value),
+        parseFloat(document.querySelector('input[name="pendapatan"]').value),
+        parseFloat(document.querySelector('input[name="skor_belanja"]').value),
+        parseFloat(document.querySelector('input[name="transaksi_per_bulan"]').value),
+        parseFloat(document.querySelector('input[name="rata_nilai_transaksi"]').value),
+        parseFloat(document.querySelector('select[name="jumlah_kategori"]').value),
+        parseFloat(document.querySelector('select[name="frekuensi_promo"]').value),
+        parseFloat(document.querySelector('input[name="rata_rating"]').value),
+        parseFloat(document.querySelector('select[name="metode_pembayaran"]').value)
+    ];
+
+    // 2. Standardize inputs (Z-Score)
+    const scaledFeatures = rawValues.map((val, idx) => {
+        return (val - stats[idx].mean) / stats[idx].std;
+    });
+
+    // 3. Find closest cluster (Euclidean Distance to centroids)
+    let minDistance = Infinity;
+    let predictedCluster = 0;
+
+    for (let c = 0; c < centers.length; c++) {
+        let squaredDist = 0;
+        for (let f = 0; f < scaledFeatures.length; f++) {
+            const diff = scaledFeatures[f] - centers[c][f];
+            squaredDist += diff * diff;
+        }
+        if (squaredDist < minDistance) {
+            minDistance = squaredDist;
+            predictedCluster = c;
+        }
+    }
+
+    // 4. Render output in the DOM
+    const info = clusterInfo[predictedCluster];
+    
+    document.getElementById('result-icon').innerText = info.icon;
+    
+    const badge = document.getElementById('result-badge');
+    badge.innerText = `Hasil Prediksi: Cluster ${predictedCluster}`;
+    badge.style.backgroundColor = info.warna_badge;
+    badge.style.color = info.warna_primary;
+    
+    document.getElementById('result-segment-name').innerText = info.nama;
+    document.getElementById('result-desc').innerText = info.deskripsi;
+    
+    // Populate characteristics list
+    const listContainer = document.getElementById('result-characteristics');
+    listContainer.innerHTML = '';
+    info.karakteristik.forEach(charText => {
+        const li = document.createElement('li');
+        li.innerText = charText;
+        listContainer.appendChild(li);
+    });
+    
+    document.getElementById('result-recommendation').innerText = info.rekomendasi;
+    
+    // Show results element and scroll to it
+    const resultsContainer = document.getElementById('results');
+    resultsContainer.style.display = 'flex';
+    resultsContainer.scrollIntoView({ behavior: 'smooth' });
 }
 </script>
 
