@@ -79,21 +79,10 @@ cluster_info = {
         ],
         'rekomendasi': 'Gunakan personal marketing email/notifikasi tentang barang-barang mewah (high-end), rilis produk premium terbaru, serta promo eksklusif akhir pekan untuk menarik kembali minat belanja mereka.'
     },
-    4: {
-        'nama': 'Pelanggan Aktif Eksploratif',
-        'deskripsi': 'Pelanggan sangat aktif dengan pendapatan menengah. Mereka sangat gemar mengeksplorasi dan membeli berbagai jenis kategori produk berbeda serta memiliki tingkat kepuasan yang tinggi.',
-        'icon': '🚀',
-        'warna_primary': '#ae3ec9',
-        'warna_badge': 'rgba(174, 62, 201, 0.15)',
-        'karakteristik': [
-            'Usia dewasa muda (~34 tahun)',
-            'Pendapatan tahunan menengah (~61 Juta Rp)',
-            'Membeli banyak kategori produk berbeda (rata-rata > 2 kategori)',
-            'Sangat aktif berbelanja (~4 kali) dengan tingkat kepuasan yang tinggi (~3.84/5)'
-        ],
-        'rekomendasi': 'Gunakan sistem rekomendasi produk (recommender system) lintas kategori (cross-selling), tawarkan reward poin berdasarkan keaktifan harian/mingguan, serta berikan penawaran paket produk serbaguna.'
-    }
 }
+
+# Cluster valid yang digunakan (4 segmen sesuai analisis notebook)
+VALID_CLUSTERS = [0, 1, 2, 3]
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -126,6 +115,12 @@ def home():
         # Prediksi cluster
         input_scaled = np.array([scaled_features])
         hasil_cluster = int(model_kmeans.predict(input_scaled)[0])
+
+        # Safeguard: jika model memprediksi cluster di luar 4 segmen valid,
+        # fallback ke cluster 0 sebagai default
+        if hasil_cluster not in VALID_CLUSTERS:
+            hasil_cluster = 0
+
         info_cluster = cluster_info.get(hasil_cluster)
 
     return render_template('index.html', hasil=hasil_cluster, info=info_cluster)
